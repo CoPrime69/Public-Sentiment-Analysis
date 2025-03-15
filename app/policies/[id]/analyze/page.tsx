@@ -65,7 +65,7 @@ export default function AnalyzePolicyPage() {
         count: saveResult.savedCount,
       });
     } catch (err: unknown) {
-      const errMessage = typeof error === 'string' ? error : 'An error occurred';
+      const errMessage = typeof err === 'string' ? err : 'An error occurred';
 
       if (errMessage.includes("rate limit")) {
         setError(
