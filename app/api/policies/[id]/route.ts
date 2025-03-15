@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 // Define the proper params type for Next.js App Router
-type Params = {
-  id: string;
-};
+interface Context {
+  params: {
+    id: string;
+  };
+}
 
 export async function GET(
   request: NextRequest,
-  context: { params: Params }
+  { params }: Context
 ) {
   try {
-    const policyId = context.params.id;
+    const policyId = params.id;
 
     const policy = await prisma.policy.findUnique({
       where: { id: policyId },
@@ -42,10 +44,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Params }
+  { params }: Context
 ) {
   try {
-    const policyId = context.params.id;
+    const policyId = params.id;
     const { name, description, keywords } = await request.json();
 
     const policy = await prisma.policy.update({
@@ -70,10 +72,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Params }
+  { params }: Context
 ) {
   try {
-    const policyId = context.params.id;
+    const policyId = params.id;
 
     // Delete associated sentiments first
     await prisma.sentiment.deleteMany({
