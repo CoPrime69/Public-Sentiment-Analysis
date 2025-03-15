@@ -3,10 +3,10 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  // { params }: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = params.id;
     const searchParams = request.nextUrl.searchParams;
     const timeframe = searchParams.get('timeframe') || 'all';
     

@@ -3,13 +3,13 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  // { params }: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = params.id;
     
     const policy = await prisma.policy.findUnique({
-      where: { id },
+      where: { id: policyId },
       include: {
         _count: {
           select: { tweets: true }
@@ -36,14 +36,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  // { params }: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = params.id;
     const { name, description, keywords } = await request.json();
     
     const policy = await prisma.policy.update({
-      where: { id },
+      where: { id: policyId },
       data: {
         name,
         description,
@@ -63,28 +63,28 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  // { params }: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = params.id;
     
     // Delete associated sentiments first
     await prisma.sentiment.deleteMany({
       where: {
         tweet: {
-          policyId : id
+          policyId
         }
       }
     });
     
     // Delete associated tweets
     await prisma.tweet.deleteMany({
-      where: { policyId :id }
+      where: { policyId }
     });
     
     // Delete the policy
     await prisma.policy.delete({
-      where: { id }
+      where: { id: policyId }
     });
     
     return NextResponse.json({ success: true });
