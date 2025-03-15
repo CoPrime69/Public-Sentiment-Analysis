@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// Define the Tweet interface with the properties we need
+interface TweetWithSentiment {
+  sentiment: {
+    label: string;
+  } | null;
+  createdAt: Date | string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
@@ -24,7 +32,7 @@ export async function GET(request: NextRequest) {
       [date: string]: SentimentCounts;
     }
 
-    const sentimentByDate = tweets.reduce((acc: SentimentByDate, tweet) => {
+    const sentimentByDate = tweets.reduce((acc: SentimentByDate, tweet: TweetWithSentiment) => {
       if (!tweet.sentiment) return acc;
 
       const date = new Date(tweet.createdAt).toISOString().split('T')[0];
@@ -50,7 +58,7 @@ export async function GET(request: NextRequest) {
     chartData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return NextResponse.json(chartData);
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error occurred' },
       { status: 500 }
