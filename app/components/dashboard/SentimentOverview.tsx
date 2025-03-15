@@ -21,18 +21,29 @@ export default function SentimentOverview({ policyId }: SentimentOverviewProps) 
     total: 0
   });
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     async function fetchSentimentStats() {
       try {
-        const response = await fetch(`/api/sentiment/stats?policyId=${policyId}`);
+        // Ensure the URL is correctly formatted with the right parameter name
+        const apiUrl = `/api/sentiment/stats?policyId=${policyId}`;
+        console.log(`Fetching from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch sentiment stats');
+          const errorText = await response.text();
+          console.error(`API Error (${response.status}): ${errorText}`);
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
         }
+        
         const data = await response.json();
+        console.log('Received data:', data);
         setStats(data);
       } catch (error) {
         console.error('Error fetching sentiment stats:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -40,6 +51,9 @@ export default function SentimentOverview({ policyId }: SentimentOverviewProps) 
     
     if (policyId) {
       fetchSentimentStats();
+    } else {
+      setLoading(false);
+      setError('No policy ID provided');
     }
   }, [policyId]);
   

@@ -6,79 +6,110 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Access params.id directly as it's actually already available
-    // The error is misleading - the params object itself doesn't need to be awaited
     const policyId = params.id;
+    const searchParams = request.nextUrl.searchParams;
+    const timeframe = searchParams.get('timeframe') || 'all';
     
-    // Get tweets with sentiment for this policy
-    const tweets = await prisma.tweet.findMany({
-      where: { policyId },
-      include: { sentiment: true },
-      orderBy: { createdAt: 'desc' }
+    console.log(`Fetching sentiment data for policy ${policyId}, timeframe: ${timeframe}`);
+    
+    // Handle various cases
+    if (!policyId) {
+      return NextResponse.json({ error: 'Policy ID is required' }, { status: 400 });
+    }
+    
+    // Check if policy exists
+    const policy = await prisma.policy.findUnique({
+      where: { id: policyId },
+      select: { id: true, name: true }
     });
     
-    // Define Tweet interface
-    interface Tweet {
-      sentiment?: {
-        label: string;
-      };
-      createdAt: Date | string;
+    if (!policy) {
+      return NextResponse.json({ error: 'Policy not found' }, { status: 404 });
     }
     
-    // Group by date and sentiment
-    interface SentimentCounts {
-      positive: number;
-      negative: number;
-      neutral: number;
-      total: number;
-    }
-
-    interface SentimentByDate {
-      [date: string]: SentimentCounts;
-    }
-
-    type SentimentLabel = 'positive' | 'negative' | 'neutral';
-
-    const sentimentByDate: SentimentByDate = tweets.reduce((acc: SentimentByDate, tweet: Tweet) => {
-      if (!tweet.sentiment) return acc;
+    // Fetch tweets with sentiment data for this policy
+    // Using select to avoid the updatedAt field issue
+    const tweetsWithSentiment = await prisma.tweet.findMany({
+      where: {
+        policyId: policyId
+      },
+      select: {
+        id: true,
+        tweetId: true,
+        text: true,
+        author: true,
+        createdAt: true,
+        sentiment: {
+          select: {
+            label: true,
+            score: true
+          }
+        }
+      }
+    });
+    
+    console.log(`Found ${tweetsWithSentiment.length} tweets with sentiment data`);
+    
+    // Group by date and count sentiments
+    const sentimentByDate = new Map();
+    
+    // Process tweets based on timeframe
+    tweetsWithSentiment.forEach(tweet => {
+      // Format date differently based on timeframe
+      let dateKey;
       
-      const date = new Date(tweet.createdAt).toISOString().split('T')[0];
+      if (timeframe === 'week') {
+        // For week, group by day
+        dateKey = new Date(tweet.createdAt).toISOString().split('T')[0];
+      } else if (timeframe === 'month') {
+        // For month, group by day
+        dateKey = new Date(tweet.createdAt).toISOString().split('T')[0];
+      } else {
+        // For all time, group by month
+        const date = new Date(tweet.createdAt);
+        dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      }
       
-      if (!acc[date]) {
-        acc[date] = {
+      // Initialize stats for this date if not already there
+      if (!sentimentByDate.has(dateKey)) {
+        sentimentByDate.set(dateKey, {
+          date: dateKey,
           positive: 0,
           negative: 0,
           neutral: 0,
           total: 0
-        };
+        });
       }
       
-      const sentiment = tweet.sentiment.label.toLowerCase();
-      if (sentiment === 'positive' || sentiment === 'negative' || sentiment === 'neutral') {
-        acc[date][sentiment as SentimentLabel]++;
-        acc[date].total++;
-      }
+      // Increment counters
+      const stats = sentimentByDate.get(dateKey);
+      stats.total++;
       
-      return acc;
-    }, {});
+      if (tweet.sentiment) {
+        const label = tweet.sentiment.label?.toLowerCase();
+        if (label === 'positive') {
+          stats.positive++;
+        } else if (label === 'negative') {
+          stats.negative++;
+        } else if (label === 'neutral') {
+          stats.neutral++;
+        }
+      }
+    });
     
-    // Convert to array format for charts
-    const chartData = Object.keys(sentimentByDate).map(date => ({
-      date,
-      positive: sentimentByDate[date].positive,
-      negative: sentimentByDate[date].negative,
-      neutral: sentimentByDate[date].neutral,
-      total: sentimentByDate[date].total
-    }));
+    // Convert to array and sort by date
+    let result = Array.from(sentimentByDate.values())
+      .sort((a, b) => a.date.localeCompare(b.date));
     
-    // Sort by date
-    chartData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return NextResponse.json(result);
     
-    return NextResponse.json(chartData);
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error('Error fetching sentiment trend data:', error);
+    
+    // Return error details
+    return NextResponse.json({
+      error: 'Failed to fetch sentiment trend data',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }

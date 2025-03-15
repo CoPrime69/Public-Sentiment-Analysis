@@ -102,15 +102,33 @@ export async function GET(request: NextRequest) {
       );
     }
     
+    // Use select instead of include to avoid the problematic updatedAt field
     const tweets = await prisma.tweet.findMany({
       where: { policyId },
-      include: { sentiment: true },
+      select: {
+        id: true,
+        tweetId: true,
+        text: true,
+        author: true,
+        createdAt: true,
+        policyId: true,
+        sentiment: {
+          select: {
+            id: true,
+            label: true,
+            score: true,
+            confidence: true
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
       take: 100
     });
     
+    console.log(`Found ${tweets.length} tweets for policy ${policyId}`);
     return NextResponse.json(tweets);
   } catch (error: any) {
+    console.error('Error fetching tweets:', error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
