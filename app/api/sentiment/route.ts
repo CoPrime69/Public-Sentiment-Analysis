@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { analyzeSentiment } from '@/lib/sentiment';
 import prisma from '@/lib/prisma';
 
+// Define interface for Tweet with sentiment
+interface TweetWithSentiment {
+  id: string;
+  sentiment: {
+    label: string;
+  } | null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { text, tweetId } = await request.json();
@@ -91,7 +99,7 @@ export async function GET(request: NextRequest) {
       total: tweets.length
     };
 
-    tweets.forEach((tweet) => {
+    tweets.forEach((tweet: TweetWithSentiment) => {
       if (tweet.sentiment) {
         const label = tweet.sentiment.label.toLowerCase();
         if (label === 'positive') {
