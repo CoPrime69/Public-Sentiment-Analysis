@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Sector,
+  Sector
 } from "recharts";
 
 // Define all necessary types
@@ -136,12 +136,12 @@ export default function TrendAnalysis({
   const pieData = getLatestData();
   const trendSummary = getTrendSummary();
 
-  // Fix the typing issue - properly type the parameter and return type
-  const onPieEnter = (_: any, index: number): void => {
+  // Fix the typing issue - properly type the parameter
+  const onPieEnter = (_: unknown, index: number): void => {
     setActiveIndex(index);
   };
 
-  // Properly typed renderActiveShape function - use React.ReactElement instead of JSX.Element
+  // Properly typed renderActiveShape function
   const renderActiveShape = (props: ActiveShapeProps): React.ReactElement => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
 
@@ -248,7 +248,7 @@ export default function TrendAnalysis({
               <PieChart>
                 <Pie
                   activeIndex={activeIndex}
-                  // Fix the typing issue by explicitly typing the props parameter
+                  // Fixed: Use explicit typing for the props parameter
                   activeShape={(props: any) => renderActiveShape(props as ActiveShapeProps)}
                   data={pieData}
                   cx="50%"
