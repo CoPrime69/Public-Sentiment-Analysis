@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// Define the proper params type for Next.js App Router
-interface Context {
-  params: {
-    id: string;
-  };
-}
-
 export async function GET(
   request: NextRequest,
-  { params }: Context
+  { params }: { params: { id: string } }
 ) {
   try {
     const policyId = params.id;
@@ -44,7 +37,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: Context
+  { params }: { params: { id: string } }
 ) {
   try {
     const policyId = params.id;
@@ -72,7 +65,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: Context
+  { params }: { params: { id: string } }
 ) {
   try {
     const policyId = params.id;
