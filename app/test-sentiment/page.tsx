@@ -24,9 +24,10 @@ export default function TestSentimentPage() {
       const sentimentResult = await analyzeSentiment(text);
       console.log('Sentiment result:', sentimentResult);
       setResult(sentimentResult);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMessage = typeof err === 'string' ? err : err instanceof Error ? err.message : 'Unknown error';
       console.error('Error analyzing sentiment:', err);
-      setError(err.message);
+      setError(errMessage);
     } finally {
       setLoading(false);
     }

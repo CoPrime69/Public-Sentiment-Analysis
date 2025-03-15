@@ -20,10 +20,11 @@ export async function POST(request: NextRequest) {
       result: result,
       success: true
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = typeof error === 'string' ? error : 'An error occurred';
     console.error('Error in test sentiment analysis:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }

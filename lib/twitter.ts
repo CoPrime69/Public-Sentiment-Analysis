@@ -30,7 +30,8 @@ export async function fetchTweetsByKeywords(keywords: string[], maxResults: numb
     }
 
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = typeof error === 'string' ? error : 'An error occurred';
     console.error('Error fetching tweets:', error);
     throw error;
   }

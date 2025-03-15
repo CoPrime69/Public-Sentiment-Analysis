@@ -34,8 +34,9 @@ export default function EditPolicyPage() {
           description: policy.description,
           keywords: policy.keywords.join(', ')
         });
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const errMessage = typeof err === 'string' ? err : err instanceof Error ? err.message : 'Unknown error';
+        setError(errMessage);
       } finally {
         setIsLoading(false);
       }
@@ -84,8 +85,9 @@ export default function EditPolicyPage() {
       }
       
       router.push('/policies');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: unknown) {
+      const errorMessage = typeof error === 'string' ? error : 'An error occurred';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -107,8 +109,10 @@ export default function EditPolicyPage() {
       }
       
       router.push('/policies');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errMessage = typeof err === 'string' ? err : err instanceof Error ? err.message : 'An error occurred';
+      setError(errMessage);
+      // setError(err.message);
     }
   };
   

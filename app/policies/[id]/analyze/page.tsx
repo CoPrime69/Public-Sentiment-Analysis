@@ -26,8 +26,10 @@ export default function AnalyzePolicyPage() {
         }
         const data = await response.json();
         setPolicy(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const errMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Unknown error";
+        setError(errMessage);
+        // setError(err.message);
       } finally {
         setIsLoading(false);
       }
@@ -62,13 +64,15 @@ export default function AnalyzePolicyPage() {
         message: `Successfully collected and analyzed tweets.`,
         count: saveResult.savedCount,
       });
-    } catch (err: any) {
-      if (err.message.includes("rate limit")) {
+    } catch (err: unknown) {
+      const errMessage = typeof error === 'string' ? error : 'An error occurred';
+
+      if (errMessage.includes("rate limit")) {
         setError(
           "Twitter API rate limit reached. Please try again in 15 minutes."
         );
       } else {
-        setError(err.message);
+        setError(errMessage);
       }
     } finally {
       setIsCollecting(false);

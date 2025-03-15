@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         });
         
         savedTweets.push(savedTweet);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Error analyzing sentiment for tweet ${tweet.id}:`, error);
       }
     }
@@ -81,10 +81,12 @@ export async function POST(request: NextRequest) {
       success: true, 
       savedCount: savedTweets.length 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = typeof error === 'string' ? error : 'An error occurred';
+
     console.error('Error saving tweets:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -127,10 +129,12 @@ export async function GET(request: NextRequest) {
     
     console.log(`Found ${tweets.length} tweets for policy ${policyId}`);
     return NextResponse.json(tweets);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = typeof error === 'string' ? error : 'An error occurred';
+
     console.error('Error fetching tweets:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }

@@ -47,8 +47,10 @@ export default function NewPolicyPage() {
       }
       
       router.push('/policies');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errMessage = typeof err === 'string' ? err : err instanceof Error ? err.message : 'Unknown error';
+      setError(errMessage);
+      // setError(err.message);
     } finally {
       setIsSubmitting(false);
     }

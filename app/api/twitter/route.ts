@@ -157,10 +157,11 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = typeof error === 'string' ? error : 'An error occurred';
     console.error('Server error when calling Twitter API:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }
