@@ -26,7 +26,14 @@ export async function POST(request: NextRequest) {
     }
     
     // Process and save tweets
-    const savedTweets = [];
+    const savedTweets: Array<{
+      id: string;
+      createdAt: Date;
+      tweetId: string;
+      text: string;
+      author: string;
+      policyId: string;
+    }> = [];
     
     for (const tweet of tweets) {
       // Skip if tweet already exists
