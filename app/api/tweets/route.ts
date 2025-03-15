@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         });
         
         savedTweets.push(savedTweet);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Error analyzing sentiment for tweet ${tweet.id}:`, error);
       }
     }
@@ -81,10 +81,11 @@ export async function POST(request: NextRequest) {
       success: true, 
       savedCount: savedTweets.length 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('Error saving tweets:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -110,9 +111,10 @@ export async function GET(request: NextRequest) {
     });
     
     return NextResponse.json(tweets);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }

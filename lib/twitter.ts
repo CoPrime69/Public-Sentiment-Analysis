@@ -1,6 +1,6 @@
 // lib/twitter.ts
 
-export async function fetchTweetsByKeywords(keywords: string[], maxResults: number = 100, retryCount: number = 0) {
+export async function fetchTweetsByKeywords(keywords: string[], maxResults: number = 100) {
   try {
     const response = await fetch('/api/twitter', {
       method: 'POST',
@@ -18,8 +18,8 @@ export async function fetchTweetsByKeywords(keywords: string[], maxResults: numb
     if (!response.ok) {
       // Handle rate limiting specifically
       if (response.status === 429) {
-        const waitTime = data.error?.match(/(\d+) seconds/) ? 
-          parseInt(data.error.match(/(\d+) seconds/)[1]) : 60;
+        const waitTimeMatch = data.error?.match(/(\d+) seconds/);
+        const waitTime = waitTimeMatch ? parseInt(waitTimeMatch[1]) : 60;
         
         // Throw a more user-friendly error message
         throw new Error(`Twitter API rate limit reached. Please wait ${waitTime} seconds before trying again.`);
@@ -30,13 +30,22 @@ export async function fetchTweetsByKeywords(keywords: string[], maxResults: numb
     }
 
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching tweets:', error);
     throw error;
   }
 }
 
-export async function saveTweetsForPolicy(policyId: string, tweets: any[]) {
+// Define a proper Tweet interface
+interface Tweet {
+  id: string;
+  text: string;
+  author: string;
+  createdAt: string;
+  [key: string]: unknown; // Allow additional properties
+}
+
+export async function saveTweetsForPolicy(policyId: string, tweets: Tweet[]) {
   try {
     const response = await fetch('/api/tweets', {
       method: 'POST',

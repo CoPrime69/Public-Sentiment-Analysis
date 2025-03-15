@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json({ sentiment });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('Error in sentiment analysis:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
       total: tweets.length
     };
 
-    tweets.forEach((tweet: any) => {
+    tweets.forEach((tweet) => {
       if (tweet.sentiment) {
         const label = tweet.sentiment.label.toLowerCase();
         if (label === 'positive') {
@@ -104,8 +105,9 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(stats);
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch sentiment stats';
     console.error('Error fetching sentiment stats:', error);
-    return NextResponse.json({ error: 'Failed to fetch sentiment stats' }, { status: 500 });
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

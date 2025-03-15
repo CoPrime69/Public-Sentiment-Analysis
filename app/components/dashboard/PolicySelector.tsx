@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 interface Policy {
   id: string;
@@ -49,12 +50,12 @@ export default function PolicySelector({
       </div>
 
       <div className="mt-4 flex justify-end">
-        <a
+        <Link
           href="/policies"
           className="text-blue-500 hover:text-blue-700 text-sm font-medium"
         >
           Manage Policies →
-        </a>
+        </Link>
       </div>
     </div>
   );

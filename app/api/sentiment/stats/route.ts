@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       total: tweets.length
     };
 
-    tweets.forEach((tweet: any) => {
+    tweets.forEach((tweet) => {
       if (tweet.sentiment) {
         const label = tweet.sentiment.label.toLowerCase();
         if (label === 'positive') {
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(stats);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching sentiment stats:', error);
     return NextResponse.json({ error: 'Failed to fetch sentiment stats' }, { status: 500 });
   }

@@ -6,8 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Access params.id directly as it's actually already available
-    // The error is misleading - the params object itself doesn't need to be awaited
+    // Access params.id directly as it's already available
     const policyId = params.id;
     
     // Get tweets with sentiment for this policy
@@ -17,15 +16,9 @@ export async function GET(
       orderBy: { createdAt: 'desc' }
     });
     
-    // Define Tweet interface
-    interface Tweet {
-      sentiment?: {
-        label: string;
-      };
-      createdAt: Date | string;
-    }
+    // Define proper types for our data structures
+    type SentimentLabel = 'positive' | 'negative' | 'neutral';
     
-    // Group by date and sentiment
     interface SentimentCounts {
       positive: number;
       negative: number;
@@ -37,9 +30,9 @@ export async function GET(
       [date: string]: SentimentCounts;
     }
 
-    type SentimentLabel = 'positive' | 'negative' | 'neutral';
-
-    const sentimentByDate: SentimentByDate = tweets.reduce((acc: SentimentByDate, tweet: Tweet) => {
+    // Process tweets to create sentiment data by date
+    const sentimentByDate = tweets.reduce((acc: SentimentByDate, tweet) => {
+      // Skip tweets without sentiment
       if (!tweet.sentiment) return acc;
       
       const date = new Date(tweet.createdAt).toISOString().split('T')[0];
@@ -60,7 +53,7 @@ export async function GET(
       }
       
       return acc;
-    }, {});
+    }, {} as SentimentByDate);
     
     // Convert to array format for charts
     const chartData = Object.keys(sentimentByDate).map(date => ({
@@ -75,9 +68,10 @@ export async function GET(
     chartData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     return NextResponse.json(chartData);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }
