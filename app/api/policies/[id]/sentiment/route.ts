@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
-export async function GET(request: NextRequest, { params } : RouteParams) {
+export async function GET(request: NextRequest) {
   try {
-    const policyId = params.id;
+    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
 
     const tweets = await prisma.tweet.findMany({
       where: { policyId },
