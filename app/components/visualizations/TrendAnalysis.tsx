@@ -32,7 +32,7 @@ export default function TrendAnalysis({
       try {
         const response = await fetch(`/api/policies/${policyId}/sentiment?timeframe=${timeframe}`);
         const trendData = await response.json();
-        const fn = 0;
+        // const fn = 0;
         // fn++;
         // Process data if needed edeidhe
         const processedData = trendData.map((item: TrendData) => ({
