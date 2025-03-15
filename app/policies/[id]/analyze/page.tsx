@@ -152,7 +152,7 @@ export default function AnalyzePolicyPage() {
         <button
           onClick={handleCollectTweets}
           disabled={isCollecting}
-          className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+          className={`cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
             isCollecting ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >

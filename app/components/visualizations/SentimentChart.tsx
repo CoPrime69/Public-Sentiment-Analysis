@@ -309,8 +309,8 @@ export default function TrendAnalysis({
           <button
             className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
               timeframe === "week"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-blue-600 text-white shadow-md cursor-pointer"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer"
             }`}
             onClick={() => setTimeframe("week")}
           >
@@ -319,8 +319,8 @@ export default function TrendAnalysis({
           <button
             className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
               timeframe === "month"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-blue-600 text-white shadow-md cursor-pointer"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer"
             }`}
             onClick={() => setTimeframe("month")}
           >
@@ -329,8 +329,8 @@ export default function TrendAnalysis({
           <button
             className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
               timeframe === "all"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-blue-600 text-white shadow-md cursor-pointer"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer"
             }`}
             onClick={() => setTimeframe("all")}
           >

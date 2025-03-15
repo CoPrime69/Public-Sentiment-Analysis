@@ -98,7 +98,7 @@ export async function GET(
     });
     
     // Convert to array and sort by date
-    let result = Array.from(sentimentByDate.values())
+    const result = Array.from(sentimentByDate.values())
       .sort((a, b) => a.date.localeCompare(b.date));
     
     return NextResponse.json(result);

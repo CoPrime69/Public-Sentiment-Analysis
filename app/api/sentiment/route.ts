@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json({ sentiment });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = typeof error === 'string' ? error : 'An error occurred';
     console.error('Error in sentiment analysis:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }
