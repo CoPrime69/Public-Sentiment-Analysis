@@ -141,6 +141,7 @@ export default function TrendAnalysis({
   const pieData = getLatestData();
   const trendSummary = getTrendSummary();
 
+  // Fixed: Properly type the parameters
   const onPieEnter = (_: unknown, index: number): void => {
     setActiveIndex(index);
   };
@@ -252,7 +253,7 @@ export default function TrendAnalysis({
               <PieChart>
                 <Pie
                   activeIndex={activeIndex}
-                  activeShape={(props: any) => renderActiveShape(props as RenderActiveShapeProps)}
+                  activeShape={(props) => renderActiveShape(props as RenderActiveShapeProps)}
                   data={pieData}
                   cx="50%"
                   cy="50%"
@@ -260,13 +261,13 @@ export default function TrendAnalysis({
                   outerRadius={110}
                   fill="#8884d8"
                   dataKey="value"
-                  onMouseEnter={(_, index: number) => onPieEnter(_, index)}
+                  onMouseEnter={onPieEnter}
                   paddingAngle={2}
                   animationBegin={0}
                   animationDuration={1000}
                 >
                   {pieData.map((entry: ChartDataEntry, index: number) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip
