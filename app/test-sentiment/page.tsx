@@ -9,6 +9,28 @@ interface SentimentResult {
   confidence: number;
 }
 
+interface ErrorWithMessage {
+  message: string;
+}
+
+// Type guard to check if an error object has a message property
+function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as Record<string, unknown>).message === 'string'
+  );
+}
+
+// Function to extract error message from unknown error
+function getErrorMessage(error: unknown): string {
+  if (isErrorWithMessage(error)) {
+    return error.message;
+  }
+  return String(error);
+}
+
 export default function TestSentimentPage() {
   const [text, setText] = useState('The new healthcare policy is making a positive impact. Better access to affordable care means more people can see doctors when they need to.');
   const [result, setResult] = useState<SentimentResult | null>(null);
@@ -24,9 +46,9 @@ export default function TestSentimentPage() {
       const sentimentResult = await analyzeSentiment(text);
       console.log('Sentiment result:', sentimentResult);
       setResult(sentimentResult);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error analyzing sentiment:', err);
-      setError(err.message);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -71,8 +93,8 @@ export default function TestSentimentPage() {
       } else {
         setError(`Error: ${data.error}`);
       }
-    } catch (err: any) {
-      setError(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      setError(`Error: ${getErrorMessage(err)}`);
     }
     analyzeText();
   };
@@ -86,14 +108,14 @@ export default function TestSentimentPage() {
     }
   };
 
-  const getSentimentClassification = () => {
-    if (!result) return '';
+  // const getSentimentClassification = () => {
+  //   if (!result) return '';
     
-    return `${result.label.charAt(0).toUpperCase() + result.label.slice(1)} - Based on our thresholds:
-    - 0 to 0.45: Negative
-    - 0.45 to 0.55: Neutral
-    - 0.55 to 1: Positive`;
-  };
+  //   return `${result.label.charAt(0).toUpperCase() + result.label.slice(1)} - Based on our thresholds:
+  //   - 0 to 0.45: Negative
+  //   - 0.45 to 0.55: Neutral
+  //   - 0.55 to 1: Positive`;
+  // };
 
   return (
     <div className="container mx-auto px-4 py-8">

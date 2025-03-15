@@ -6,9 +6,10 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  Legend,
   Tooltip,
-  Sector
+  Sector,
+  // Remove unused import
+  // Legend
 } from "recharts";
 
 interface TrendData {
@@ -27,8 +28,15 @@ interface TrendAnalysisProps {
   timeframe?: "week" | "month" | "all";
 }
 
-// Define the ActiveShapeProps interface based on the props Recharts will provide
-interface ActiveShapeProps {
+// Define chart data entry type
+interface ChartDataEntry {
+  name: string;
+  value: number;
+  color: string;
+}
+
+// Define the ActiveShapeProps interface for the renderActiveShape function
+interface RenderActiveShapeProps {
   cx: number;
   cy: number;
   innerRadius: number;
@@ -36,14 +44,8 @@ interface ActiveShapeProps {
   startAngle: number;
   endAngle: number;
   fill: string;
-  payload: {
-    name: string;
-    value: number;
-    [key: string]: any;
-  };
-  percent: number;
+  payload: ChartDataEntry;
   value: number;
-  [key: string]: any;
 }
 
 export default function TrendAnalysis({
@@ -143,9 +145,9 @@ export default function TrendAnalysis({
     setActiveIndex(index);
   };
 
-  // The renderActiveShape function with proper typing
-    const renderActiveShape = (props: any) => {
-      const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
+  // The renderActiveShape function properly typed to match Recharts' expected signature
+  const renderActiveShape = (props: RenderActiveShapeProps) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
 
     return (
       <g>
@@ -250,7 +252,7 @@ export default function TrendAnalysis({
               <PieChart>
                 <Pie
                   activeIndex={activeIndex}
-                  activeShape={renderActiveShape}
+                  activeShape={renderActiveShape as any}
                   data={pieData}
                   cx="50%"
                   cy="50%"
@@ -268,7 +270,7 @@ export default function TrendAnalysis({
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => [`${value}%`, ""]}
+                  formatter={(value: number) => [`${value}%`, ""]}
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
                     border: "1px solid #e5e7eb",

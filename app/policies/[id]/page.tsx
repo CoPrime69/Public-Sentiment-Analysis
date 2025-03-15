@@ -3,6 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
+// Define interfaces for better type safety
+interface Policy {
+  name: string;
+  description: string;
+  keywords: string[];
+}
+
 export default function EditPolicyPage() {
   const params = useParams();
   const policyId = params.id as string;
@@ -27,15 +34,16 @@ export default function EditPolicyPage() {
           throw new Error('Failed to fetch policy');
         }
         
-        const policy = await response.json();
+        const policy = await response.json() as Policy;
         
         setFormData({
           name: policy.name,
           description: policy.description,
           keywords: policy.keywords.join(', ')
         });
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -84,8 +92,9 @@ export default function EditPolicyPage() {
       }
       
       router.push('/policies');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -107,8 +116,9 @@ export default function EditPolicyPage() {
       }
       
       router.push('/policies');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
     }
   };
   

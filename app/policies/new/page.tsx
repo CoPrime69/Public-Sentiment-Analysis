@@ -47,8 +47,9 @@ export default function NewPolicyPage() {
       }
       
       router.push('/policies');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

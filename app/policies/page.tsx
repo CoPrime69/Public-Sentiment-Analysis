@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+// import { Suspense } from "react";
 import Link from "next/link";
 import CopyButton from "@/utils/CopyButton";
 

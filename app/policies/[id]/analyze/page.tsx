@@ -5,17 +5,34 @@ import { useRouter } from "next/navigation";
 import { fetchTweetsByKeywords, saveTweetsForPolicy } from "@/lib/twitter";
 import { useParams } from "next/navigation";
 
+// Define interfaces for better type safety
+interface Policy {
+  id: string;
+  name: string;
+  description: string;
+  keywords: string[];
+  _count: {
+    tweets: number;
+  };
+}
+
+interface CollectionResult {
+  success: boolean;
+  message: string;
+  count: number;
+}
+
 export default function AnalyzePolicyPage() {
   // Use the useParams hook instead of directly accessing params
   const params = useParams();
   const policyId = params.id as string;
 
   const router = useRouter();
-  const [policy, setPolicy] = useState<any>(null);
+  const [policy, setPolicy] = useState<Policy | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCollecting, setIsCollecting] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CollectionResult | null>(null);
 
   useEffect(() => {
     async function fetchPolicy() {
@@ -26,8 +43,9 @@ export default function AnalyzePolicyPage() {
         }
         const data = await response.json();
         setPolicy(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -37,6 +55,8 @@ export default function AnalyzePolicyPage() {
   }, [policyId]);
 
   const handleCollectTweets = async () => {
+    if (!policy) return;
+    
     setIsCollecting(true);
     setError("");
     setResult(null);
@@ -62,13 +82,15 @@ export default function AnalyzePolicyPage() {
         message: `Successfully collected and analyzed tweets.`,
         count: saveResult.savedCount,
       });
-    } catch (err: any) {
-      if (err.message.includes("rate limit")) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      
+      if (errorMessage.includes("rate limit")) {
         setError(
           "Twitter API rate limit reached. Please try again in 15 minutes."
         );
       } else {
-        setError(err.message);
+        setError(errorMessage);
       }
     } finally {
       setIsCollecting(false);
@@ -88,6 +110,24 @@ export default function AnalyzePolicyPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           Error: {error}
+        </div>
+        <div className="mt-4">
+          <button
+            onClick={() => router.push("/policies")}
+            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+          >
+            Back to Policies
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!policy) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          Error: Policy not found
         </div>
         <div className="mt-4">
           <button
