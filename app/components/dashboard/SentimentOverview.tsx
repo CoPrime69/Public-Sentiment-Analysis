@@ -21,7 +21,7 @@ export default function SentimentOverview({ policyId }: SentimentOverviewProps) 
     total: 0
   });
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     async function fetchSentimentStats() {
@@ -43,7 +43,7 @@ export default function SentimentOverview({ policyId }: SentimentOverviewProps) 
         setStats(data);
       } catch (error) {
         console.error('Error fetching sentiment stats:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+        // setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -53,7 +53,7 @@ export default function SentimentOverview({ policyId }: SentimentOverviewProps) 
       fetchSentimentStats();
     } else {
       setLoading(false);
-      setError('No policy ID provided');
+      // setError('No policy ID provided');
     }
   }, [policyId]);
   

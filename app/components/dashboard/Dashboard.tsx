@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import PolicySelector from "./PolicySelector";
 import SentimentOverview from "./SentimentOverview";
@@ -55,12 +55,12 @@ export default function Dashboard() {
         <p className="mb-4">
           You need to create a policy to start analyzing sentiment.
         </p>
-        <a
+        <Link
           href="/policies"
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
         >
           Create Policy
-        </a>
+        </Link>
       </div>
     );
   }

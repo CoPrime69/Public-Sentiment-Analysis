@@ -6,7 +6,7 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  Legend,
+  // Legend,
   Tooltip,
   Sector
 } from "recharts";
@@ -28,23 +28,23 @@ interface TrendAnalysisProps {
 }
 
 // Define the ActiveShapeProps interface based on the props Recharts will provide
-interface ActiveShapeProps {
-  cx: number;
-  cy: number;
-  innerRadius: number;
-  outerRadius: number;
-  startAngle: number;
-  endAngle: number;
-  fill: string;
-  payload: {
-    name: string;
-    value: number;
-    [key: string]: any;
-  };
-  percent: number;
-  value: number;
-  [key: string]: any;
-}
+// interface ActiveShapeProps {
+//   cx: number;
+//   cy: number;
+//   innerRadius: number;
+//   outerRadius: number;
+//   startAngle: number;
+//   endAngle: number;
+//   fill: string;
+//   payload: {
+//     name: string;
+//     value: number;
+//     [key: string]: any;
+//   };
+//   percent: number;
+//   value: number;
+//   [key: string]: any;
+// }
 
 export default function TrendAnalysis({
   policyId,

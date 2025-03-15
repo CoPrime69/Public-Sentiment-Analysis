@@ -1,6 +1,6 @@
 // lib/twitter.ts
 
-export async function fetchTweetsByKeywords(keywords: string[], maxResults: number = 100, retryCount: number = 0) {
+export async function fetchTweetsByKeywords(keywords: string[], maxResults: number = 100) {
   try {
     const response = await fetch('/api/twitter', {
       method: 'POST',

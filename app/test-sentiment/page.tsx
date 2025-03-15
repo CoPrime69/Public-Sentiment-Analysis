@@ -86,14 +86,14 @@ export default function TestSentimentPage() {
     }
   };
 
-  const getSentimentClassification = () => {
-    if (!result) return '';
+  // const getSentimentClassification = () => {
+  //   if (!result) return '';
     
-    return `${result.label.charAt(0).toUpperCase() + result.label.slice(1)} - Based on our thresholds:
-    - 0 to 0.45: Negative
-    - 0.45 to 0.55: Neutral
-    - 0.55 to 1: Positive`;
-  };
+  //   return `${result.label.charAt(0).toUpperCase() + result.label.slice(1)} - Based on our thresholds:
+  //   - 0 to 0.45: Negative
+  //   - 0.45 to 0.55: Neutral
+  //   - 0.55 to 1: Positive`;
+  // };
 
   return (
     <div className="container mx-auto px-4 py-8">
