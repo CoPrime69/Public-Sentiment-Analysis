@@ -84,10 +84,11 @@ export async function GET(request: NextRequest) {
     }
     
     return NextResponse.json(chartData);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('Error fetching sentiment trend data:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }

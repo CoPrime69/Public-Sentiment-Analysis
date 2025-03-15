@@ -252,7 +252,7 @@ export default function TrendAnalysis({
               <PieChart>
                 <Pie
                   activeIndex={activeIndex}
-                  activeShape={renderActiveShape as any}
+                  activeShape={(props: any) => renderActiveShape(props as RenderActiveShapeProps)}
                   data={pieData}
                   cx="50%"
                   cy="50%"
@@ -260,13 +260,13 @@ export default function TrendAnalysis({
                   outerRadius={110}
                   fill="#8884d8"
                   dataKey="value"
-                  onMouseEnter={onPieEnter}
+                  onMouseEnter={(_, index: number) => onPieEnter(_, index)}
                   paddingAngle={2}
                   animationBegin={0}
                   animationDuration={1000}
                 >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {pieData.map((entry: ChartDataEntry, index: number) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip
