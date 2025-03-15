@@ -40,14 +40,13 @@ model Tweet {
   sentiment  Sentiment?
 }
 
-// In schema.prisma
 model Sentiment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   score     Float    // Raw sentiment score (0-1)
   label     String   // 'positive', 'negative', or 'neutral'
   confidence Float    // Confidence level
   tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
-  tweetId   String   @db.ObjectId
+  tweetId   String   @unique @db.ObjectId  // Added @unique here
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
