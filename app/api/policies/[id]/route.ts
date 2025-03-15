@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(request: NextRequest, { params }) {
+export async function GET(request: NextRequest, { params } : any) {
   try {
     const policyId = params.id;
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }) {
+export async function PUT(request: NextRequest, { params }: any) {
   try {
     const policyId = params.id;
     const { name, description, keywords } = await request.json();
@@ -46,7 +46,7 @@ export async function PUT(request: NextRequest, { params }) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }) {
+export async function DELETE(request: NextRequest, { params }: any) {
   try {
     const policyId = params.id;
 
