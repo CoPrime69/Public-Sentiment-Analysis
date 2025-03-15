@@ -249,7 +249,7 @@ export default function TrendAnalysis({
                 <Pie
                   activeIndex={activeIndex}
                   // Fixed: Use explicit typing for the props parameter
-                  activeShape={(props: any) => renderActiveShape(props as ActiveShapeProps)}
+                  activeShape={(props: unknown) => renderActiveShape(props as ActiveShapeProps)}
                   data={pieData}
                   cx="50%"
                   cy="50%"
