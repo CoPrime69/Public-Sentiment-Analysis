@@ -8,30 +8,31 @@ type Params = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Params }
+  context: { params: Params }
 ) {
   try {
-    const policyId = params.id;
-    
+    const policyId = context.params.id;
+
     const policy = await prisma.policy.findUnique({
       where: { id: policyId },
       include: {
         _count: {
-          select: { tweets: true }
-        }
-      }
+          select: { tweets: true },
+        },
+      },
     });
-    
+
     if (!policy) {
       return NextResponse.json(
         { error: 'Policy not found' },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(policy);
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -41,24 +42,25 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Params }
+  context: { params: Params }
 ) {
   try {
-    const policyId = params.id;
+    const policyId = context.params.id;
     const { name, description, keywords } = await request.json();
-    
+
     const policy = await prisma.policy.update({
       where: { id: policyId },
       data: {
         name,
         description,
-        keywords
-      }
+        keywords,
+      },
     });
-    
+
     return NextResponse.json(policy);
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -68,33 +70,34 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Params }
+  context: { params: Params }
 ) {
   try {
-    const policyId = params.id;
-    
+    const policyId = context.params.id;
+
     // Delete associated sentiments first
     await prisma.sentiment.deleteMany({
       where: {
         tweet: {
-          policyId
-        }
-      }
+          policyId,
+        },
+      },
     });
-    
+
     // Delete associated tweets
     await prisma.tweet.deleteMany({
-      where: { policyId }
+      where: { policyId },
     });
-    
+
     // Delete the policy
     await prisma.policy.delete({
-      where: { id: policyId }
+      where: { id: policyId },
     });
-    
+
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
