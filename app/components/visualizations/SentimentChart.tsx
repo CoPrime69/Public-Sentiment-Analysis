@@ -8,10 +8,9 @@ import {
   ResponsiveContainer,
   Tooltip,
   Sector,
-  // Remove unused import
-  // Legend
 } from "recharts";
 
+// Define all necessary types
 interface TrendData {
   date: string;
   positive: number;
@@ -28,15 +27,14 @@ interface TrendAnalysisProps {
   timeframe?: "week" | "month" | "all";
 }
 
-// Define chart data entry type
 interface ChartDataEntry {
   name: string;
   value: number;
   color: string;
 }
 
-// Define the ActiveShapeProps interface for the renderActiveShape function
-interface RenderActiveShapeProps {
+// Properly define the props for the active shape renderer
+interface ActiveShapeProps {
   cx: number;
   cy: number;
   innerRadius: number;
@@ -52,12 +50,10 @@ export default function TrendAnalysis({
   policyId,
   timeframe: initialTimeframe = "all",
 }: TrendAnalysisProps) {
-  const [timeframe, setTimeframe] = useState<"week" | "month" | "all">(
-    initialTimeframe
-  );
+  const [timeframe, setTimeframe] = useState<"week" | "month" | "all">(initialTimeframe);
   const [data, setData] = useState<TrendData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
 
   useEffect(() => {
     async function fetchTrendData() {
@@ -67,10 +63,9 @@ export default function TrendAnalysis({
         );
         const trendData = await response.json();
 
-        // Process data if needed
+        // Process data
         const processedData = trendData.map((item: TrendData) => ({
           ...item,
-          // Calculate percentages
           positivePercentage:
             item.total > 0 ? Math.round((item.positive / item.total) * 100) : 0,
           negativePercentage:
@@ -93,8 +88,8 @@ export default function TrendAnalysis({
     }
   }, [policyId, timeframe]);
 
-  // Prepare data for pie chart - get the latest data point
-  const getLatestData = () => {
+  // Get the latest data point for pie chart
+  const getLatestData = (): ChartDataEntry[] => {
     if (data.length === 0) return [];
 
     const latestEntry = data[data.length - 1];
@@ -117,7 +112,7 @@ export default function TrendAnalysis({
     ];
   };
 
-  // Get trend summary data
+  // Calculate trend summary
   const getTrendSummary = () => {
     if (data.length === 0) return { positive: 0, neutral: 0, negative: 0 };
 
@@ -141,13 +136,13 @@ export default function TrendAnalysis({
   const pieData = getLatestData();
   const trendSummary = getTrendSummary();
 
-  // Fixed: Properly type the parameters
-  const onPieEnter = (_: unknown, index: number): void => {
+  // Fix the typing issue - properly type the parameter and return type
+  const onPieEnter = (_: any, index: number): void => {
     setActiveIndex(index);
   };
 
-  // The renderActiveShape function properly typed to match Recharts' expected signature
-  const renderActiveShape = (props: RenderActiveShapeProps) => {
+  // Properly typed renderActiveShape function - use React.ReactElement instead of JSX.Element
+  const renderActiveShape = (props: ActiveShapeProps): React.ReactElement => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
 
     return (
@@ -253,7 +248,8 @@ export default function TrendAnalysis({
               <PieChart>
                 <Pie
                   activeIndex={activeIndex}
-                  activeShape={(props) => renderActiveShape(props as RenderActiveShapeProps)}
+                  // Fix the typing issue by explicitly typing the props parameter
+                  activeShape={(props: any) => renderActiveShape(props as ActiveShapeProps)}
                   data={pieData}
                   cx="50%"
                   cy="50%"
