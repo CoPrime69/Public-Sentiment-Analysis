@@ -5,8 +5,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "noImplicitAny": false,
-    "strict": false,          // Changed from true to false
-    "strictNullChecks": false, // Added
+    "strict": true,         
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -15,8 +14,6 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "useUnknownInCatchVariables": false, // Added
-    "noEmitOnError": false,  // Added to continue build despite errors
     "plugins": [
       {
         "name": "next"

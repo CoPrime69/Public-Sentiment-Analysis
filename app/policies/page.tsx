@@ -1,4 +1,3 @@
-// import { Suspense } from "react";
 import Link from "next/link";
 import CopyButton from "@/utils/CopyButton";
 
@@ -13,7 +12,12 @@ interface Policy {
 }
 
 async function getPolicies() {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/policies`, {
+  const baseUrl =
+    typeof window === "undefined"
+      ? process.env.NEXTAUTH_URL || "http://localhost:3000"
+      : "";
+
+  const res = await fetch(`${baseUrl}/api/policies`, {
     cache: "no-store",
   });
 
@@ -25,7 +29,13 @@ async function getPolicies() {
 }
 
 export default async function PoliciesPage() {
-  const policies = await getPolicies();
+  let policies: Policy[] = [];
+
+  try {
+    policies = await getPolicies();
+  } catch (error) {
+    console.error("Error fetching policies:", error);
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -43,78 +53,76 @@ export default async function PoliciesPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Description
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Keywords
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Tweets
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {policies.map((policy: Policy) => (
-              <tr key={policy.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {policy.name}
-                  </div>
-                  <div className="mt-2 p-2 bg-gray-100 rounded font-mono text-xs break-all">
-                    <div className="font-bold bg-gray-300 mb-[2px] py-[2px] px-[6px] rounded-sm">Policy ID for testing</div>
-                    <div className="flex items-center justify-between">
-                      <span className="truncate">{policy.id}</span>
-                      <CopyButton textToCopy={policy.id} />
+            {policies.length > 0 ? (
+              policies.map((policy) => (
+                <tr key={policy.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {policy.name}
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-500 line-clamp-2">
+                    <div className="mt-2 p-2 bg-gray-100 rounded font-mono text-xs break-all">
+                      <div className="font-bold bg-gray-300 mb-[2px] py-[2px] px-[6px] rounded-sm">
+                        Policy ID for testing
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="truncate">{policy.id}</span>
+                        <CopyButton textToCopy={policy.id} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 line-clamp-2">
                     {policy.description}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-1">
-                    {policy.keywords.map((keyword: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
-                      >
-                        {keyword}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
+                      {policy.keywords.map((keyword, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {policy._count.tweets}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <Link
-                    href={`/policies/${policy.id}`}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
-                  >
-                    Edit
-                  </Link>
-                  <Link
-                    href={`/policies/${policy.id}/analyze`}
-                    className="text-green-600 hover:text-green-900"
-                  >
-                    Analyze
-                  </Link>
-                </td>
-              </tr>
-            ))}
-
-            {policies.length === 0 && (
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <Link
+                      href={`/policies/${policy.id}`}
+                      className="text-blue-600 hover:text-blue-900 mr-4"
+                    >
+                      Edit
+                    </Link>
+                    <Link
+                      href={`/policies/${policy.id}/analyze`}
+                      className="text-green-600 hover:text-green-900"
+                    >
+                      Analyze
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
                 <td
                   colSpan={5}
