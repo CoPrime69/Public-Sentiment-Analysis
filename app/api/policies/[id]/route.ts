@@ -3,10 +3,10 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  // { params }: { params: { id: string } }
 ) {
   try {
-    const policyId = params.id;
+    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
     
     const policy = await prisma.policy.findUnique({
       where: { id: policyId },
@@ -36,10 +36,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  // { params }: { params: { id: string } }
 ) {
   try {
-    const policyId = params.id;
+    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
     const { name, description, keywords } = await request.json();
     
     const policy = await prisma.policy.update({
@@ -63,10 +63,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  // { params }: { params: { id: string } }
 ) {
   try {
-    const policyId = params.id;
+    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
     
     // Delete associated sentiments first
     await prisma.sentiment.deleteMany({
