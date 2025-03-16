@@ -3,7 +3,8 @@ import prisma from '@/lib/prisma';
 
 export async function GET(request, { params }) {
   try {
-    const policyId = params.id;
+    const resolvedParams = await params;
+    const policyId = resolvedParams.id;
     const searchParams = request.nextUrl.searchParams;
     const timeframe = searchParams.get('timeframe') || 'all';
     
