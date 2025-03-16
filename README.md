@@ -46,8 +46,7 @@ The application follows a modern architecture with the following components:
 ### Installation Steps
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/Public-Sentiment-Analysis.git
+cd Public-Sentiment-Analysis
 
 # Install dependencies
 npm install
