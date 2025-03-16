@@ -1,12 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(
-  request: NextRequest,
-  // { params }: { params: { id: string } }
-) {
+export async function GET(request, { params }) {
   try {
-    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = params.id;
     const searchParams = request.nextUrl.searchParams;
     const timeframe = searchParams.get('timeframe') || 'all';
     

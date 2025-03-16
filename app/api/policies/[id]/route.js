@@ -1,12 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(
-  request: NextRequest,
-  // { params }: { params: { id: string } }
-) {
+export async function GET(request, context) {
   try {
-    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = context.params.id;
     
     const policy = await prisma.policy.findUnique({
       where: { id: policyId },
@@ -25,7 +22,7 @@ export async function GET(
     }
     
     return NextResponse.json(policy);
-  } catch (error: unknown) {
+  } catch (error) {
     const errorMessage = typeof error === 'string' ? error : 'An error occurred';
     return NextResponse.json(
       { error: errorMessage },
@@ -34,12 +31,9 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  // { params }: { params: { id: string } }
-) {
+export async function PUT(request, context) {
   try {
-    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = context.params.id;
     const { name, description, keywords } = await request.json();
     
     const policy = await prisma.policy.update({
@@ -52,7 +46,7 @@ export async function PUT(
     });
     
     return NextResponse.json(policy);
-  } catch (error: unknown) {
+  } catch (error) {
     const errorMessage = typeof error === 'string' ? error : 'An error occurred';
     return NextResponse.json(
       { error: errorMessage },
@@ -61,12 +55,9 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  // { params }: { params: { id: string } }
-) {
+export async function DELETE(request, context) {
   try {
-    const policyId = request.nextUrl.pathname.split('/').pop(); // Extract id from URL
+    const policyId = context.params.id;
     
     // Delete associated sentiments first
     await prisma.sentiment.deleteMany({
@@ -88,7 +79,7 @@ export async function DELETE(
     });
     
     return NextResponse.json({ success: true });
-  } catch (error: unknown) {
+  } catch (error) {
     const errorMessage = typeof error === 'string' ? error : 'An error occurred';
     return NextResponse.json(
       { error: errorMessage },
