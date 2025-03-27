@@ -16,6 +16,16 @@ export default function AnalyzePolicyPage() {
   const [isCollecting, setIsCollecting] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<any>(null);
+  
+  // Add states for real-time updates
+  const [progress, setProgress] = useState({
+    stage: "",
+    generatedCount: 0,
+    processedCount: 0,
+    savedCount: 0,
+    duplicatesFiltered: 0,
+    total: 0
+  });
 
   useEffect(() => {
     async function fetchPolicy() {
@@ -29,7 +39,6 @@ export default function AnalyzePolicyPage() {
       } catch (err: unknown) {
         const errMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Unknown error";
         setError(errMessage);
-        // setError(err.message);
       } finally {
         setIsLoading(false);
       }
@@ -42,10 +51,24 @@ export default function AnalyzePolicyPage() {
     setIsCollecting(true);
     setError("");
     setResult(null);
+    setProgress({
+      stage: "Generating tweets...",
+      generatedCount: 0,
+      processedCount: 0,
+      savedCount: 0,
+      duplicatesFiltered: 0,
+      total: 0
+    });
 
     try {
-      // Fetch tweets using the policy keywords
-      const twitterData = await fetchTweetsByKeywords(policy.keywords);
+      // Fetch tweets using the policy keywords AND description
+      setProgress(prev => ({ ...prev, stage: "Generating tweets..." }));
+      const twitterData = await fetchTweetsByKeywords(
+        policy.keywords, 
+        policy.id,
+        policy.description,
+        20 // Generate 20 tweets each time for better variety
+      );
 
       if (!twitterData.data || twitterData.data.length === 0) {
         setResult({
@@ -53,29 +76,71 @@ export default function AnalyzePolicyPage() {
           message: "No new tweets found for the specified keywords.",
           count: 0,
         });
+        setIsCollecting(false);
         return;
       }
 
-      // Save tweets to database
-      const saveResult = await saveTweetsForPolicy(policy.id, twitterData.data);
+      // Update progress after generation
+      setProgress(prev => ({ 
+        ...prev, 
+        stage: "Processing tweets...",
+        generatedCount: twitterData.meta?.generated_count || twitterData.data.length,
+        duplicatesFiltered: twitterData.meta?.duplicates_filtered || 0,
+        total: twitterData.data.length 
+      }));
 
+      // Process tweets in batches to show progress
+      const tweets = twitterData.data;
+      const batchSize = 5;
+      let savedCount = 0;
+
+      for (let i = 0; i < tweets.length; i += batchSize) {
+        const batch = tweets.slice(i, i + batchSize);
+        
+        // Save this batch
+        const saveResult = await saveTweetsForPolicy(policy.id, batch);
+        savedCount += saveResult.savedCount;
+        
+        // Update progress
+        setProgress(prev => ({ 
+          ...prev, 
+          processedCount: Math.min(i + batchSize, tweets.length),
+          savedCount: savedCount
+        }));
+        
+        // Short delay to show progress update
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      // Final result
       setResult({
         success: true,
         message: `Successfully collected and analyzed tweets.`,
-        count: saveResult.savedCount,
+        count: savedCount,
       });
+      
+      // Also update the policy tweet count
+      setPolicy({
+        ...policy,
+        _count: {
+          ...policy._count,
+          tweets: policy._count.tweets + savedCount
+        }
+      });
+      
     } catch (err: unknown) {
-      const errMessage = typeof err === 'string' ? err : 'An error occurred';
+      const errMessage = typeof err === 'string' ? err : err instanceof Error ? err.message : 'An error occurred';
 
       if (errMessage.includes("rate limit")) {
         setError(
-          "Twitter API rate limit reached. Please try again in 15 minutes."
+          "API rate limit reached. Please try again in a few minutes."
         );
       } else {
         setError(errMessage);
       }
     } finally {
       setIsCollecting(false);
+      setProgress(prev => ({ ...prev, stage: "Complete" }));
     }
   };
 
@@ -163,7 +228,41 @@ export default function AnalyzePolicyPage() {
           {isCollecting ? "Collecting Tweets..." : "Collect and Analyze Tweets"}
         </button>
 
-        {result && (
+        {/* Real-time progress updates */}
+        {isCollecting && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+            <h3 className="font-semibold mb-2">Processing Status</h3>
+            <p className="mb-2">{progress.stage}</p>
+            
+            {progress.generatedCount > 0 && (
+              <div className="mb-2">
+                <p>Generated {progress.generatedCount} tweets 
+                  {progress.duplicatesFiltered > 0 ? 
+                    ` (${progress.duplicatesFiltered} duplicates filtered)` : ''}</p>
+              </div>
+            )}
+            
+            {progress.total > 0 && (
+              <div className="mb-2">
+                <p>Processing: {progress.processedCount} of {progress.total} tweets</p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${(progress.processedCount / progress.total) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            {progress.savedCount > 0 && (
+              <p className="font-medium text-blue-700">
+                Saved {progress.savedCount} new tweets so far
+              </p>
+            )}
+          </div>
+        )}
+
+        {result && !isCollecting && (
           <div className="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
             <h3 className="font-semibold mb-2">Collection Complete</h3>
             <p>{result.message}</p>

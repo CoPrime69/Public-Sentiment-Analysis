@@ -4,7 +4,7 @@ import { analyzeSentiment } from '@/lib/sentiment';
 
 export async function POST(request: NextRequest) {
   try {
-    const { policyId, tweets, sentimentResult } = await request.json();
+    const { policyId, tweets, sentimentResult, isTestSentiment = false } = await request.json();
     
     if (!policyId || !tweets || !Array.isArray(tweets)) {
       return NextResponse.json(
@@ -35,58 +35,89 @@ export async function POST(request: NextRequest) {
       policyId: string;
     }> = [];
     
+    const duplicates: string[] = [];
+    
     for (const tweet of tweets) {
-      // Skip if tweet already exists
-      const existingTweet = await prisma.tweet.findUnique({
-        where: { tweetId: tweet.id }
-      });
-      
-      if (existingTweet) continue;
-      
-      // Save the tweet
-      const savedTweet = await prisma.tweet.create({
-        data: {
-          tweetId: tweet.id,
-          text: tweet.text,
-          author: tweet.author_id,
-          createdAt: new Date(tweet.created_at),
-          policyId
-        }
-      });
-      
-      // Handle sentiment analysis - either use provided result or analyze
+      // Skip if tweet already exists by ID or nearly identical text
       try {
-        let sentimentData;
-        
-        // If sentiment result was provided (from test-sentiment page), use that
-        if (sentimentResult && tweets.length === 1) {
-          sentimentData = sentimentResult;
-          console.log('Using provided sentiment data:', sentimentData);
-        } else {
-          // Otherwise analyze the sentiment
-          console.log(`Analyzing sentiment for tweet: ${tweet.text.substring(0, 50)}...`);
-          sentimentData = await analyzeSentiment(tweet.text);
-        }
-        
-        // Create sentiment record
-        await prisma.sentiment.create({
-          data: {
-            score: sentimentData.score,
-            label: sentimentData.label,
-            confidence: sentimentData.confidence,
-            tweetId: savedTweet.id
+        const existingTweet = await prisma.tweet.findFirst({
+          where: { 
+            OR: [
+              { tweetId: tweet.id },
+              { text: tweet.text }
+            ]
           }
         });
         
-        savedTweets.push(savedTweet);
+        if (existingTweet) {
+          duplicates.push(tweet.id);
+          continue;
+        }
+        
+        // Save the tweet
+        const savedTweet = await prisma.tweet.create({
+          data: {
+            tweetId: tweet.id,
+            text: tweet.text,
+            author: tweet.author_id,
+            createdAt: new Date(tweet.created_at),
+            policyId
+          }
+        });
+        
+        // Handle sentiment analysis based on source priority
+        try {
+          let sentimentData;
+          let sentimentSource = 'unknown';
+          
+          if (isTestSentiment && sentimentResult) {
+            // Case 1: Explicit test sentiment page result
+            sentimentData = sentimentResult;
+            sentimentSource = 'test-sentiment-page';
+          } else if (tweet.sentiment) {
+            // Case 2: Pre-labeled sentiment from Gemini
+            const confidence = tweet.sentiment === 'neutral' ? 0.5 : 0.8;
+            
+            sentimentData = {
+              label: tweet.sentiment,
+              score: tweet.sentiment === 'positive' ? 0.8 : 
+                    tweet.sentiment === 'negative' ? 0.2 : 0.5,
+              confidence: confidence
+            };
+            sentimentSource = 'gemini-prelabeled';
+          } else {
+            // Case 3: Fallback to worker analysis when no other sentiment data exists
+            console.log(`No pre-labeled sentiment found, analyzing for tweet: ${tweet.text.substring(0, 50)}...`);
+            sentimentData = await analyzeSentiment(tweet.text);
+            sentimentSource = 'local-sentiment-worker';
+          }
+          
+          console.log(`Using sentiment from ${sentimentSource} for tweet ${tweet.id}: ${sentimentData.label}`);
+          
+          // Create sentiment record
+          await prisma.sentiment.create({
+            data: {
+              score: sentimentData.score,
+              label: sentimentData.label,
+              confidence: sentimentData.confidence,
+              tweetId: savedTweet.id
+            }
+          });
+          
+          savedTweets.push(savedTweet);
+        } catch (error: unknown) {
+          console.error(`Error analyzing sentiment for tweet ${tweet.id}:`, error);
+        }
       } catch (error: unknown) {
-        console.error(`Error analyzing sentiment for tweet ${tweet.id}:`, error);
+        console.error(`Error processing tweet ${tweet.id}:`, error);
+        // Continue processing other tweets even if one fails
       }
     }
     
     return NextResponse.json({ 
       success: true, 
-      savedCount: savedTweets.length 
+      savedCount: savedTweets.length,
+      duplicateCount: duplicates.length
     });
   } catch (error: unknown) {
     const errorMessage = typeof error === 'string' ? error : 'An error occurred';

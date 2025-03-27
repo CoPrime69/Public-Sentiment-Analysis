@@ -1,43 +1,37 @@
 // lib/twitter.ts
 
-export async function fetchTweetsByKeywords(keywords: string[], maxResults: number = 100) {
+export async function fetchTweetsByKeywords(keywords: string[], policyId?: string, policyDescription?: string, maxResults: number = 100, sentimentDistribution?: any) {
   try {
-    const response = await fetch('/api/twitter', {
+    // Now using Gemini API instead of Twitter API
+    const response = await fetch('/api/gemini/tweets', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         keywords,
-        maxResults
+        policyId,
+        policyDescription,
+        maxResults,
+        sentimentDistribution
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      // Handle rate limiting specifically
-      if (response.status === 429) {
-        const waitTime = data.error?.match(/(\d+) seconds/) ? 
-          parseInt(data.error.match(/(\d+) seconds/)[1]) : 60;
-        
-        // Throw a more user-friendly error message
-        throw new Error(`Twitter API rate limit reached. Please wait ${waitTime} seconds before trying again.`);
-      }
-      
-      // For other errors
-      throw new Error(data.error || 'Failed to fetch tweets');
+      throw new Error(data.error || 'Failed to generate tweets');
     }
 
     return data;
   } catch (error: unknown) {
-    // const errorMessage = typeof error === 'string' ? error : 'An error occurred';
-    console.error('Error fetching tweets:', error);
+    console.error('Error generating tweets:', error);
     throw error;
   }
 }
 
-export async function saveTweetsForPolicy(policyId: string, tweets: any[]) {
+
+export async function saveTweetsForPolicy(policyId: string, tweets: any[], sentimentResult?: any, isTestSentiment: boolean = false) {
   try {
     const response = await fetch('/api/tweets', {
       method: 'POST',
@@ -46,7 +40,9 @@ export async function saveTweetsForPolicy(policyId: string, tweets: any[]) {
       },
       body: JSON.stringify({
         policyId,
-        tweets
+        tweets,
+        sentimentResult,
+        isTestSentiment
       })
     });
 
