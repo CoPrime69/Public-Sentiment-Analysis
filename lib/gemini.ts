@@ -101,18 +101,31 @@ export async function generateTweets(
     
     // Generate the content
     const result = await model.generateContent(prompt);
-    const response = result.response;
-    const textContent = response.text();
     
-    // Parse the JSON response
-    let tweets;
+    // Fix JSON parsing from Gemini response
+    let tweets: Array<{
+      id?: string;
+      text: string;
+      author_id?: string;
+      created_at: string;
+      sentiment: string;
+      username: string;
+    }> = [];
     try {
-      // Find JSON in the response
-      const jsonMatch = textContent.match(/\[\s*\{[\s\S]*\}\s*\]/);
-      if (jsonMatch) {
-        tweets = JSON.parse(jsonMatch[0]);
+      const textContent = result.response.text();
+      
+      // Extract JSON content from markdown code blocks if present
+      const jsonRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+      const jsonMatch = textContent.match(jsonRegex);
+      
+      if (jsonMatch && jsonMatch[1]) {
+        tweets = JSON.parse(jsonMatch[1]);
       } else {
-        tweets = JSON.parse(textContent);
+        // Try direct parsing or clean up the response
+        const cleanedContent = textContent
+          .replace(/^```json\s*/i, '')  // Remove opening markdown
+          .replace(/\s*```$/i, '');     // Remove closing markdown
+        tweets = JSON.parse(cleanedContent);
       }
       
       // Ensure tweet IDs and author IDs are actually unique by adding index if needed
@@ -143,13 +156,10 @@ export async function generateTweets(
       }
       
       return tweets;
-    } catch (parseError) {
-      console.error("Failed to parse Gemini response:", parseError);
-      console.log("Raw response:", textContent);
-      
-      // Generate fallback tweets on error
-      console.log("Generating fallback tweets due to parsing error");
-      return generateFallbackTweets(effectiveKeywords, policyDescription, targetCount, batchPrefix);
+    } catch (error: unknown) {
+      console.error('Error parsing Gemini response:', error);
+      console.log('Raw response:', result.response.text());
+      throw new Error(`Failed to parse Gemini response: ${error instanceof Error ? error.message : String(error)}`);
     }
   } catch (error) {
     console.error("Error generating tweets with Gemini:", error);

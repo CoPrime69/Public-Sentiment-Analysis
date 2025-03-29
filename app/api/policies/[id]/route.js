@@ -3,7 +3,8 @@ import prisma from '@/lib/prisma';
 
 export async function GET(request, context) {
   try {
-    const policyId = context.params.id;
+    const params = await context.params;
+    const policyId = params.id;
     
     const policy = await prisma.policy.findUnique({
       where: { id: policyId },
@@ -33,7 +34,8 @@ export async function GET(request, context) {
 
 export async function PUT(request, context) {
   try {
-    const policyId = context.params.id;
+    const params = await context.params;
+    const policyId = params.id;
     const { name, description, keywords } = await request.json();
     
     const policy = await prisma.policy.update({
@@ -57,7 +59,8 @@ export async function PUT(request, context) {
 
 export async function DELETE(request, context) {
   try {
-    const policyId = context.params.id;
+    const params = await context.params;
+    const policyId = params.id;
     
     // Delete associated sentiments first
     await prisma.sentiment.deleteMany({
