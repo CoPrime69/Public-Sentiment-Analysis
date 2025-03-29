@@ -24,7 +24,7 @@ interface TrendAnalysisProps {
 
 export default function TrendAnalysis({ 
   policyId, 
-  timeframe: initialTimeframe = 'week' 
+  timeframe: initialTimeframe = 'all' 
 }: TrendAnalysisProps) {
   const [timeframe, setTimeframe] = useState<'week' | 'month' | 'all'>(initialTimeframe);
   const [data, setData] = useState<TrendData[]>([]);
