@@ -6,7 +6,6 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  // Legend,
   Tooltip,
   Sector
 } from "recharts";
@@ -17,34 +16,15 @@ interface TrendData {
   negative: number;
   neutral: number;
   total: number;
-  positivePercentage: number;
-  negativePercentage: number;
-  neutralPercentage: number;
+  positivePercentage?: number;
+  negativePercentage?: number;
+  neutralPercentage?: number;
 }
 
 interface TrendAnalysisProps {
   policyId: string;
   timeframe?: "week" | "month" | "all";
 }
-
-// Define the ActiveShapeProps interface based on the props Recharts will provide
-// interface ActiveShapeProps {
-//   cx: number;
-//   cy: number;
-//   innerRadius: number;
-//   outerRadius: number;
-//   startAngle: number;
-//   endAngle: number;
-//   fill: string;
-//   payload: {
-//     name: string;
-//     value: number;
-//     [key: string]: any;
-//   };
-//   percent: number;
-//   value: number;
-//   [key: string]: any;
-// }
 
 export default function TrendAnalysis({
   policyId,
@@ -65,17 +45,16 @@ export default function TrendAnalysis({
         );
         const trendData = await response.json();
 
-        // Process data if needed
-        const processedData = trendData.map((item: TrendData) => ({
-          ...item,
-          // Calculate percentages
-          positivePercentage:
-            item.total > 0 ? Math.round((item.positive / item.total) * 100) : 0,
-          negativePercentage:
-            item.total > 0 ? Math.round((item.negative / item.total) * 100) : 0,
-          neutralPercentage:
-            item.total > 0 ? Math.round((item.neutral / item.total) * 100) : 0,
-        }));
+        // Process data with proper percentage calculations
+        const processedData = trendData.map((item: TrendData) => {
+          const totalCount = Math.max(item.total, 1); // Prevent division by zero
+          return {
+            ...item,
+            positivePercentage: Math.round((item.positive / totalCount) * 100),
+            negativePercentage: Math.round((item.negative / totalCount) * 100),
+            neutralPercentage: Math.round((item.neutral / totalCount) * 100),
+          };
+        });
 
         setData(processedData);
       } catch (error) {
@@ -91,81 +70,76 @@ export default function TrendAnalysis({
     }
   }, [policyId, timeframe]);
 
-  // Prepare data for pie chart - get the latest data point
+  // Calculate aggregate percentages across the entire dataset
+  const getAggregatePercentages = () => {
+    if (data.length === 0) return { positive: 0, neutral: 0, negative: 0, total: 0 };
+    
+    // Sum all sentiment counts across all dates in the timeframe
+    const totals = data.reduce(
+      (acc, item) => {
+        acc.positive += item.positive;
+        acc.neutral += item.neutral;
+        acc.negative += item.negative;
+        acc.total += item.total;
+        return acc;
+      },
+      { positive: 0, neutral: 0, negative: 0, total: 0 }
+    );
+    
+    // Calculate percentages from the totals
+    const totalCount = Math.max(totals.total, 1); // Prevent division by zero
+    return {
+      positive: Math.round((totals.positive / totalCount) * 100),
+      neutral: Math.round((totals.neutral / totalCount) * 100),
+      negative: Math.round((totals.negative / totalCount) * 100),
+      total: totalCount
+    };
+  };
+
+  // Prepare data for pie chart using aggregate percentages
   const getLatestData = () => {
     if (data.length === 0) return [];
 
-    const latestEntry = data[data.length - 1];
+    const aggregates = getAggregatePercentages();
     return [
       {
         name: "Positive",
-        value: latestEntry.positivePercentage,
+        value: aggregates.positive,
         color: "#22c55e",
       },
       {
         name: "Neutral",
-        value: latestEntry.neutralPercentage,
+        value: aggregates.neutral,
         color: "#3b82f6",
       },
       {
         name: "Negative",
-        value: latestEntry.negativePercentage,
+        value: aggregates.negative,
         color: "#ef4444",
       },
     ];
   };
 
-  // Get trend summary data
-  const getTrendSummary = () => {
-    if (data.length === 0) return { positive: 0, neutral: 0, negative: 0 };
-
-    const averages = data.reduce(
-      (acc, item) => {
-        acc.positive += item.positivePercentage;
-        acc.neutral += item.neutralPercentage;
-        acc.negative += item.negativePercentage;
-        return acc;
-      },
-      { positive: 0, neutral: 0, negative: 0 }
-    );
-
-    return {
-      positive: Math.round(averages.positive / data.length),
-      neutral: Math.round(averages.neutral / data.length),
-      negative: Math.round(averages.negative / data.length),
-    };
-  };
-
   const pieData = getLatestData();
-  const trendSummary = getTrendSummary();
+  const trendSummary = getAggregatePercentages();
 
+  // Rest of your existing renderActiveShape and UI code...
+
+  // The onPieEnter handler remains the same
   const onPieEnter = (_: unknown, index: number): void => {
     setActiveIndex(index);
   };
 
-  // The renderActiveShape function with proper typing
-    const renderActiveShape = (props: any) => {
-      const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
-
+  // Your existing renderActiveShape function...
+  const renderActiveShape = (props: any) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
+    
     return (
       <g>
-        <text
-          x={cx}
-          y={cy - 10}
-          dy={8}
-          textAnchor="middle"
-          fill="#6b7280"
-          className="text-xl font-semibold"
-        >
+        <text x={cx} y={cy - 10} dy={8} textAnchor="middle" fill="#6b7280" className="text-xl font-semibold">
           {payload.name}
         </text>
-        <text
-          x={cx}
-          y={cy + 20}
-          textAnchor="middle"
-          fill="#6b7280"
-          className="text-2xl font-bold"
-        >
+        <text x={cx} y={cy + 20} textAnchor="middle" fill="#6b7280" className="text-2xl font-bold">
           {`${value}%`}
         </text>
         <Sector
@@ -305,7 +279,7 @@ export default function TrendAnalysis({
           </div>
         </div>
 
-        <div className="mt-6 flex justify-center space-x-4">
+        {/* <div className="mt-6 flex justify-center space-x-4">
           <button
             className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
               timeframe === "week"
@@ -336,7 +310,7 @@ export default function TrendAnalysis({
           >
             All Time
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

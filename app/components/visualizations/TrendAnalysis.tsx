@@ -12,6 +12,9 @@ interface TrendData {
   negative: number;
   neutral: number;
   total: number;
+  positivePercentage?: number;
+  negativePercentage?: number;
+  neutralPercentage?: number;
 }
 
 interface TrendAnalysisProps {
@@ -32,16 +35,20 @@ export default function TrendAnalysis({
       try {
         const response = await fetch(`/api/policies/${policyId}/sentiment?timeframe=${timeframe}`);
         const trendData = await response.json();
-        // const fn = 0;
-        // fn++;
-        // Process data if needed edeidhe
-        const processedData = trendData.map((item: TrendData) => ({
-          ...item,
-          // Calculate percentages
-          positivePercentage: item.total > 0 ? Math.round((item.positive / item.total) * 100) : 0,
-          negativePercentage: item.total > 0 ? Math.round((item.negative / item.total) * 100) : 0,
-          neutralPercentage: item.total > 0 ? Math.round((item.neutral / item.total) * 100) : 0,
-        }));
+        
+        // Calculate percentages for each data point consistently
+        const processedData = trendData.map((item: TrendData) => {
+          // Ensure we don't divide by zero
+          const totalCount = Math.max(item.total, 1);
+          
+          return {
+            ...item,
+            // Calculate percentages
+            positivePercentage: Math.round((item.positive / totalCount) * 100),
+            negativePercentage: Math.round((item.negative / totalCount) * 100),
+            neutralPercentage: Math.round((item.neutral / totalCount) * 100),
+          };
+        });
         
         setData(processedData);
       } catch (error) {
@@ -169,7 +176,7 @@ export default function TrendAnalysis({
           </ResponsiveContainer>
         </div>
         
-        <div className="mt-6 flex justify-center space-x-4">
+        {/* <div className="mt-6 flex justify-center space-x-4">
           <button 
             className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
               timeframe === 'week' 
@@ -200,7 +207,7 @@ export default function TrendAnalysis({
           >
             All Time
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

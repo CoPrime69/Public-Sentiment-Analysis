@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const tweets = await generateTweets(
       effectiveKeywords,
       policyDescription || '',
-      Math.min(maxResults, 20), // Limit to 20 tweets max
+      Math.min(maxResults, 50), // Increased from 20 to 50
       sentimentDistribution
     );
     

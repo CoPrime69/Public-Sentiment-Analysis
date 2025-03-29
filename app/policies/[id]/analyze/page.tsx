@@ -61,13 +61,16 @@ export default function AnalyzePolicyPage() {
     });
 
     try {
+      // Generate a random number of tweets between 15 and 50
+      const randomTweetCount = Math.floor(Math.random() * (50 - 15 + 1)) + 15;
+
       // Fetch tweets using the policy keywords AND description
       setProgress(prev => ({ ...prev, stage: "Generating tweets..." }));
       const twitterData = await fetchTweetsByKeywords(
         policy.keywords, 
         policy.id,
         policy.description,
-        20 // Generate 20 tweets each time for better variety
+        randomTweetCount // Use the random count
       );
 
       if (!twitterData.data || twitterData.data.length === 0) {

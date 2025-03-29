@@ -3,19 +3,52 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize the Gemini API client
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
+// Generate random sentiment distribution that adds up to 1.0
+function generateRandomSentimentDistribution() {
+  // Create random weights
+  const positive = 0.2 + Math.random() * 0.5; // Between 20-70%
+  const negative = 0.1 + Math.random() * 0.4; // Between 10-50%
+  const neutral = 1 - positive - negative;
+  
+  // Ensure weights sum to 1.0
+  const sum = positive + negative + neutral;
+  const normalizedPositive = positive / sum;
+  const normalizedNegative = negative / sum;
+  const normalizedNeutral = neutral / sum;
+
+  return {
+    positive: normalizedPositive,
+    neutral: normalizedNeutral,
+    negative: normalizedNegative
+  };
+}
+
+// Generate a random number of tweets between min and max (inclusive)
+function getRandomTweetCount(min = 15, max = 50) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 export async function generateTweets(
   policyKeywords: string[], 
   policyDescription: string = '',
-  count: number = 10, 
-  sentimentDistribution: { positive: number, neutral: number, negative: number } = { positive: 0.33, neutral: 0.34, negative: 0.33 }
+  count: number = 20,
+  sentimentDistribution?: { positive: number, neutral: number, negative: number }
 ) {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     
+    // Use the provided count or generate a random count between 15-50
+    const targetCount = count === 20 ? getRandomTweetCount(15, 50) : count;
+    console.log(`Will generate approximately ${targetCount} tweets`);
+    
+    // Generate random sentiment distribution if not provided
+    const distribution = sentimentDistribution || generateRandomSentimentDistribution();
+    
     // Calculate how many tweets of each sentiment to generate
-    const positiveCount = Math.floor(count * sentimentDistribution.positive);
-    const neutralCount = Math.floor(count * sentimentDistribution.neutral);
-    const negativeCount = count - positiveCount - neutralCount;
+    const positiveCount = Math.floor(targetCount * distribution.positive);
+    const neutralCount = Math.floor(targetCount * distribution.neutral);
+    // Ensure the total is exactly targetCount
+    const negativeCount = targetCount - positiveCount - neutralCount;
     
     // Ensure we have keywords to work with
     const effectiveKeywords = policyKeywords.length > 0 ? 
@@ -26,7 +59,7 @@ export async function generateTweets(
     
     // Create our prompt - improved for more reliable generation and including policy description
     const prompt = `
-    Generate exactly ${count} realistic tweets about this policy topic:
+    Generate exactly ${targetCount}+-5 realistic tweets about this policy topic:
     
     Policy keywords: "${effectiveKeywords.join(', ')}"
     Policy description: "${policyDescription || 'A public policy related to ' + effectiveKeywords.join(' and ')}"
@@ -35,7 +68,9 @@ export async function generateTweets(
     - ${positiveCount} tweets with positive sentiment
     - ${neutralCount} tweets with neutral sentiment
     - ${negativeCount} tweets with negative sentiment
-    
+    - make the positive tweets neutral tweets and negative tweets count more randomized for better distribution, at the end they all should add up to ${targetCount} value always :), and increase the neutral count a little bit and negative a little lower, but upto you what to do 
+    - make sure the dates range from 2023 to till date for the tweet generated and the tweets should be unique and not repeated.
+    - MAKE SURE THAT THE TWEETS RANGE FROM 2023 to 6 MAY 2025 few tweets being added last week PLEASE.
     Each tweet must:
     - Be under 280 characters
     - Include at least one opinion or fact about the policy topic
@@ -59,9 +94,10 @@ export async function generateTweets(
       ... more tweets
     ]
     
-    YOU MUST GENERATE EXACTLY ${count} TWEETS. Return ONLY the JSON array with no other text.`;
+    YOU MUST GENERATE EXACTLY ${targetCount} +-5 TWEETS. Return ONLY the JSON array with no other text. Make the distribution more random`;
 
-    console.log(`Generating ${count} tweets about: ${effectiveKeywords.join(', ')}`);
+    console.log(`Generating ${targetCount} tweets about: ${effectiveKeywords.join(', ')}`);
+    console.log(`Sentiment distribution: positive=${positiveCount}, neutral=${neutralCount}, negative=${negativeCount}`);
     
     // Generate the content
     const result = await model.generateContent(prompt);
@@ -113,7 +149,7 @@ export async function generateTweets(
       
       // Generate fallback tweets on error
       console.log("Generating fallback tweets due to parsing error");
-      return generateFallbackTweets(effectiveKeywords, policyDescription, count, batchPrefix);
+      return generateFallbackTweets(effectiveKeywords, policyDescription, targetCount, batchPrefix);
     }
   } catch (error) {
     console.error("Error generating tweets with Gemini:", error);
@@ -122,7 +158,8 @@ export async function generateTweets(
     const effectiveKeywords = policyKeywords.length > 0 ? 
       policyKeywords : ['policy', 'government', 'regulation'];
     const batchPrefix = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
-    return generateFallbackTweets(effectiveKeywords, policyDescription, count, batchPrefix);
+    const targetCount = count === 20 ? getRandomTweetCount(15, 50) : count;
+    return generateFallbackTweets(effectiveKeywords, policyDescription, targetCount, batchPrefix);
   }
 }
 
