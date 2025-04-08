@@ -4,7 +4,13 @@ import prisma from '@/lib/prisma';
 
 // Cache management
 const cachedResponses = new Map();
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes
+
+// Configure longer timeout for deployed environments
+export const config = {
+  runtime: 'edge', // Use Edge runtime for better performance
+  maxDuration: 60, // Set maximum duration to 60 seconds
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +30,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Math.floor(Date.now() / 60000); // Changes every minute
     const cacheKey = `${effectiveKeywords.join('|')}_${policyId}_${maxResults}_${timestamp}`;
     
-    // Check if we have a cached response - but don't use cache if explicitly requesting new tweets
+    // Check if we have a cached response
     if (cachedResponses.has(cacheKey)) {
       const { data, timestamp } = cachedResponses.get(cacheKey);
       
@@ -40,13 +46,24 @@ export async function POST(request: NextRequest) {
     
     console.log('Generating tweets with Gemini for keywords:', effectiveKeywords);
     
-    // Generate tweets with Gemini
-    const tweets = await generateTweets(
-      effectiveKeywords,
-      policyDescription || '',
-      Math.min(maxResults, 50), // Increased from 20 to 50
-      sentimentDistribution
-    );
+    // Generate tweets with Gemini - reduced maximum and increased timeout
+    const safeMaxResults = Math.min(maxResults, 15); // Reduced from 50 to 15 tweets max
+    
+    // Add timeout to Gemini API call - increased from 25s to 45s
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Tweet generation timed out')), 45000);
+    });
+    
+    // Race between the actual generation and the timeout
+    const tweets = await Promise.race([
+      generateTweets(
+        effectiveKeywords,
+        policyDescription || '',
+        safeMaxResults,
+        sentimentDistribution
+      ),
+      timeoutPromise
+    ]) as any[];
     
     if (!tweets || tweets.length === 0) {
       return NextResponse.json(
@@ -57,20 +74,26 @@ export async function POST(request: NextRequest) {
     
     console.log(`Successfully generated ${tweets.length} tweets`);
     
-    // Check if any of these tweets already exist in the database by their text
-    // We check by text similarity instead of ID to catch semantic duplicates
-    const existingTweets = await Promise.all(
-      tweets.map(tweet => 
-        prisma.tweet.findFirst({
-          where: { 
-            OR: [
-              { tweetId: tweet.id },
-              { text: tweet.text }
-            ]
-          }
-        })
-      )
-    );
+    // Process tweets in batches to prevent timeout
+    const existingTweets: (Awaited<ReturnType<typeof prisma.tweet.findFirst>>)[] = [];
+    const batchSize = 5;
+    
+    for (let i = 0; i < tweets.length; i += batchSize) {
+      const batch = tweets.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map(tweet => 
+          prisma.tweet.findFirst({
+            where: { 
+              OR: [
+                { tweetId: tweet.id },
+                { text: tweet.text }
+              ]
+            }
+          })
+        )
+      );
+      existingTweets.push(...batchResults);
+    }
     
     // Filter out tweets that already exist in the database
     const uniqueTweets = tweets.filter((_, index) => !existingTweets[index]);

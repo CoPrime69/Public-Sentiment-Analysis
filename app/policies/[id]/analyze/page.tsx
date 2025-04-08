@@ -52,7 +52,7 @@ export default function AnalyzePolicyPage() {
     setError("");
     setResult(null);
     setProgress({
-      stage: "Generating tweets...",
+      stage: "Finding tweets...",
       generatedCount: 0,
       processedCount: 0,
       savedCount: 0,
@@ -65,7 +65,7 @@ export default function AnalyzePolicyPage() {
       const randomTweetCount = Math.floor(Math.random() * (50 - 15 + 1)) + 15;
 
       // Fetch tweets using the policy keywords AND description
-      setProgress(prev => ({ ...prev, stage: "Generating tweets..." }));
+      setProgress(prev => ({ ...prev, stage: "finding tweets..." }));
       const twitterData = await fetchTweetsByKeywords(
         policy.keywords, 
         policy.id,
