@@ -17,7 +17,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: errorMessage },
-      { status: 5000}
+      { status: 500 }  // Fixed: was 5000 which is invalid
     );
   }
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CopyButton from "@/utils/CopyButton";
+import { headers } from "next/headers";
 
 interface Policy {
   id: string;
@@ -11,31 +12,37 @@ interface Policy {
   };
 }
 
+// Explicitly set this page to be dynamic
+export const dynamic = 'force-dynamic';
+
 async function getPolicies() {
-  const baseUrl =
-    typeof window === "undefined"
-      ? process.env.NEXTAUTH_URL || "http://localhost:3000"
-      : "";
+  try {
+    // Get host information from headers
+    const headersList = await headers();
+    const host = headersList.get("host") || "localhost:3000";
+    const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+    
+    // Construct absolute URL
+    const apiUrl = `${protocol}://${host}/api/policies`;
+    
+    const res = await fetch(apiUrl, {
+      cache: "no-store",
+      next: { revalidate: 0 }
+    });
 
-  const res = await fetch(`${baseUrl}/api/policies`, {
-    cache: "no-store",
-  });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch policies: ${res.status}`);
+    }
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch policies");
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching policies:", error);
+    return [];
   }
-
-  return res.json();
 }
 
 export default async function PoliciesPage() {
-  let policies: Policy[] = [];
-
-  try {
-    policies = await getPolicies();
-  } catch (error) {
-    console.error("Error fetching policies:", error);
-  }
+  const policies: Policy[] = await getPolicies();
 
   return (
     <div className="container mx-auto px-4 py-8">
