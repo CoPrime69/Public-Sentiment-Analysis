@@ -239,7 +239,7 @@ export default function AnalyzePolicyPage() {
             
             {progress.generatedCount > 0 && (
               <div className="mb-2">
-                <p>Generated {progress.generatedCount} tweets 
+                <p>Found {progress.generatedCount} tweets 
                   {progress.duplicatesFiltered > 0 ? 
                     ` (${progress.duplicatesFiltered} duplicates filtered)` : ''}</p>
               </div>
